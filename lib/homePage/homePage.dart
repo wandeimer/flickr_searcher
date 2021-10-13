@@ -14,8 +14,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final http.Client httpClient = http.Client();
-
   void loadMoreImages(int page) async {
     try {
       final newImages = await _fetchImages(myTextController.text, page);
@@ -95,11 +93,12 @@ class _HomePageState extends State<HomePage> {
   final myTextController = TextEditingController();
   final scrollController = ScrollController();
   bool _isSearching = false; //TODO remove
-  bool _isHome = false; //TODO remove
+  bool _isHome = true; //TODO remove
   bool _goFavorite = false; //TODO remove
   List<String> _images = []; //TODO remove
   int _columnCount = 2;
   FavList favoriteList = FavList([]);
+  final http.Client httpClient = http.Client();
 
   @override
   void dispose() {
@@ -110,6 +109,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    favoriteList.setList();
     super.initState();
     scrollController.addListener(() {
       if (scrollController.position.maxScrollExtent ==
@@ -128,43 +128,48 @@ class _HomePageState extends State<HomePage> {
               title: _goFavorite
                   ? Text('Избранное')
                   : !_isSearching
-                      ? Text('Поиск изображений')
+                      ? Text(
+                          'Поиск изображений',
+                          style: TextStyle(fontSize: 18.0),
+                        )
                       : TextField(
-                          decoration: InputDecoration(hintText: 'котики'),
+                          //decoration: InputDecoration(hintText: 'котики'),
                           controller: myTextController,
                         ),
               //TODO search bloc
               actions: [
-                if(!_goFavorite)
+                if (!_goFavorite)
                   Padding(
-                    padding: EdgeInsets.only(right: 1),
-                    child: IconButton(
-                      icon: Icon(Icons.search),
-                      onPressed: () {
-                        switch (_isSearching) {
-                          case false:
-                            setState(() {
-                              _isSearching = true;
-                            });
-                            break;
-                          case true:
-                            setState(() {
-                              _isSearching = false;
-                              if (myTextController.text != '' ||
-                                  myTextController.text.isNotEmpty) {
-                                searchImages(myTextController.text);
-                              }
-                            });
-                        }
-                        //TODO action
-                      },
-                    )),
+                      padding: EdgeInsets.only(right: 1),
+                      child: IconButton(
+                        icon: Icon(Icons.search),
+                        onPressed: () {
+                          switch (_isSearching) {
+                            case false:
+                              setState(() {
+                                _isSearching = true;
+                              });
+                              break;
+                            case true:
+                              setState(() {
+                                _isSearching = false;
+                                if (myTextController.text != '' ||
+                                    myTextController.text.isNotEmpty) {
+                                  _isHome = false;
+                                  searchImages(myTextController.text);
+                                }
+                              });
+                          }
+                          //TODO action
+                        },
+                      )),
                 Padding(
                     padding: EdgeInsets.only(right: 1),
                     child: IconButton(
                       icon: Icon(Icons.bookmark_outlined),
                       onPressed: () {
                         setState(() {
+                          _isHome = false;
                           _goFavorite
                               ? _goFavorite = false
                               : _goFavorite = true;
@@ -198,6 +203,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget favList(FavList favoriteList) {
     //TODO add bloc
+    favoriteList.setList();
     List<String> images = favoriteList.getList();
     return GridView.builder(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -209,6 +215,25 @@ class _HomePageState extends State<HomePage> {
           child: GestureDetector(
             child: Image.network(
               images[index],
+              loadingBuilder: (BuildContext context, Widget child,
+                  ImageChunkEvent? loadingProgress) {
+                if (loadingProgress == null) {
+                  return child;
+                }
+                return Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xAAC1E0FF),
+                  ),
+                );
+                // return Center(
+                //   child: CircularProgressIndicator(
+                //     value: loadingProgress.expectedTotalBytes != null
+                //         ? loadingProgress.cumulativeBytesLoaded /
+                //         loadingProgress.expectedTotalBytes!
+                //         : null,
+                //   ),
+                // );
+              },
               fit: BoxFit.cover,
               errorBuilder: (BuildContext context, Object exception,
                   StackTrace? stackTrace) {
@@ -244,6 +269,17 @@ class _HomePageState extends State<HomePage> {
                   child: GestureDetector(
                     child: Image.network(
                       images[index],
+                      loadingBuilder: (BuildContext context, Widget child,
+                          ImageChunkEvent? loadingProgress) {
+                        if (loadingProgress == null) {
+                          return child;
+                        }
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xffaac1e0),
+                          ),
+                        );
+                      },
                       fit: BoxFit.cover,
                       errorBuilder: (BuildContext context, Object exception,
                           StackTrace? stackTrace) {

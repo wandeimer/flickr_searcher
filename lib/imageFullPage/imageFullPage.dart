@@ -10,7 +10,6 @@ class ImageFull extends StatefulWidget {
 }
 
 class _ImageFullState extends State<ImageFull> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,13 +17,19 @@ class _ImageFullState extends State<ImageFull> {
         actions: [
           IconButton(
             icon: Icon(Icons.bookmark_outline),
-            onPressed: (){},
+            onPressed: () {},
           )
         ],
       ),
       body: Center(
-        child: Image.network(widget.image), //Image.asset('your_image_asset', width: 200, height: 200, fit: BoxFit.cover,
-          ),
-      );
+        child: Image.network(
+          widget.image,
+          errorBuilder:
+              (BuildContext context, Object exception, StackTrace? stackTrace) {
+            return Icon(Icons.error);
+          },
+        ), //Image.asset('your_image_asset', width: 200, height: 200, fit: BoxFit.cover,
+      ),
+    );
   }
 }

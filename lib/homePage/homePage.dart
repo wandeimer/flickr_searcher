@@ -1,3 +1,4 @@
+import 'package:flickr_searcher/homePage/favList.dart';
 import 'package:flickr_searcher/imageFullPage/imageFullPage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -95,8 +96,10 @@ class _HomePageState extends State<HomePage> {
   final scrollController = ScrollController();
   bool _isSearching = false; //TODO remove
   bool _isHome = false; //TODO remove
+  bool _goFavorite = false; //TODO remove
   List<String> _images = []; //TODO remove
   int _columnCount = 2;
+  FavList favoriteList = FavList([]);
 
   @override
   void dispose() {
@@ -122,15 +125,18 @@ class _HomePageState extends State<HomePage> {
     return MaterialApp(
         home: Scaffold(
             appBar: AppBar(
-              title: !_isSearching
-                  ? Text('Поиск изображений')
-                  : TextField(
-                      decoration: InputDecoration(hintText: 'котики'),
-                      controller: myTextController,
-                    ),
+              title: _goFavorite
+                  ? Text('Избранное')
+                  : !_isSearching
+                      ? Text('Поиск изображений')
+                      : TextField(
+                          decoration: InputDecoration(hintText: 'котики'),
+                          controller: myTextController,
+                        ),
               //TODO search bloc
               actions: [
-                Padding(
+                if(!_goFavorite)
+                  Padding(
                     padding: EdgeInsets.only(right: 1),
                     child: IconButton(
                       icon: Icon(Icons.search),
@@ -144,7 +150,8 @@ class _HomePageState extends State<HomePage> {
                           case true:
                             setState(() {
                               _isSearching = false;
-                              if (myTextController.text != '' || myTextController.text.isNotEmpty){
+                              if (myTextController.text != '' ||
+                                  myTextController.text.isNotEmpty) {
                                 searchImages(myTextController.text);
                               }
                             });
@@ -157,6 +164,12 @@ class _HomePageState extends State<HomePage> {
                     child: IconButton(
                       icon: Icon(Icons.bookmark_outlined),
                       onPressed: () {
+                        setState(() {
+                          _goFavorite
+                              ? _goFavorite = false
+                              : _goFavorite = true;
+                        });
+
                         //TODO action
                       },
                     )),
@@ -172,7 +185,48 @@ class _HomePageState extends State<HomePage> {
                       ))
               ],
             ),
-            body: _isHome ? homePageWidget() : imageList(_images)));
+            body: _isHome
+                ? homePageWidget()
+                : connectorImageListWidget(
+                    _goFavorite, _images, favoriteList)));
+  }
+
+  Widget connectorImageListWidget(
+      bool _goFavorite, List<String> imagesList, FavList favoriteList) {
+    return _goFavorite ? favList(favoriteList) : imageList(imagesList);
+  }
+
+  Widget favList(FavList favoriteList) {
+    //TODO add bloc
+    List<String> images = favoriteList.getList();
+    return GridView.builder(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: _columnCount),
+      itemCount: images.length,
+      itemBuilder: (BuildContext context, int index) {
+        return Container(
+          padding: EdgeInsets.all(10),
+          child: GestureDetector(
+            child: Image.network(
+              images[index],
+              fit: BoxFit.cover,
+              errorBuilder: (BuildContext context, Object exception,
+                  StackTrace? stackTrace) {
+                return Icon(Icons.error);
+              },
+            ),
+            onTap: () {
+              Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ImageFull(
+                              image: images[index], favorite: favoriteList)))
+                  .then((value) => setState(() {}));
+            },
+          ),
+        );
+      },
+    );
   }
 
   Widget imageList(List<String> images) {
@@ -200,8 +254,9 @@ class _HomePageState extends State<HomePage> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) =>
-                                  ImageFull(image: images[index])));
+                              builder: (context) => ImageFull(
+                                  image: images[index],
+                                  favorite: favoriteList)));
                     },
                   ),
                 );

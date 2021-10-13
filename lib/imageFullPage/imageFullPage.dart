@@ -1,23 +1,42 @@
+import 'package:flickr_searcher/homePage/favList.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ImageFull extends StatefulWidget {
   final String image;
-  const ImageFull({Key? key, required this.image}) : super(key: key);
+  final FavList favorite;
+  const ImageFull({Key? key, required this.image, required this.favorite}) : super(key: key);
 
   @override
   _ImageFullState createState() => _ImageFullState();
 }
 
 class _ImageFullState extends State<ImageFull> {
+  bool _isFavorite = false;
+  List<String> favoriteList = [];
+  @override
+  void initState() {
+    favoriteList = widget.favorite.getList();
+    if (favoriteList.contains(widget.image))
+       _isFavorite = true;
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         actions: [
           IconButton(
-            icon: Icon(Icons.bookmark_outline),
-            onPressed: () {},
+            icon: _isFavorite
+                ? Icon(Icons.bookmark)
+                : Icon(Icons.bookmark_outline),
+            onPressed: () {
+              setState(() {
+                widget.favorite.changeFavState(widget.image);
+                _isFavorite = !_isFavorite;
+                favoriteList = widget.favorite.getList();
+              });
+            },
           )
         ],
       ),

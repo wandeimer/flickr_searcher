@@ -4,13 +4,10 @@ Search, view and add to favorite list images from Flickr
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
++поиск изображений по ключевым словам;
++автоматическая загрузка при достижении конца списка изображений(40 за запрос);
++обновление списка pullToRefresh;
++полноэкранный просмотр изображений;
++возможность сформировать и просмотреть список избранного;
++список избранного сохраняется с перезапуском приложения;
++возможность просмотра списков в один, два или 4-е столбца.

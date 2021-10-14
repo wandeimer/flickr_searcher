@@ -1,4 +1,5 @@
-import 'package:flickr_searcher/homePage/favList.dart';
+import 'package:flickr_searcher/flickrAPI.dart';
+import 'package:flickr_searcher/homePage/favoriteListModel.dart';
 import 'package:flickr_searcher/imageFullPage/imageFullPage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -14,61 +15,47 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  void loadMoreImages(int page) async {
+  void _loadMoreImages(int page) async {
     try {
       final newImages = await _fetchImages(myTextController.text, page);
       setState(() {
         _images.addAll(newImages);
       });
     } catch (_) {
-      print('ERROR in getImagesLinkList');
+      print('ERROR in _loadMoreImages');
     }
   }
 
-  void searchImages(String text) async {
+  void _searchImages() async {
     try {
-      final images = await _fetchImages(text, 0);
+      final images = await _fetchImages(myTextController.text, 0);
       setState(() {
         _images = images;
       });
     } catch (_) {
-      print('ERROR in getImagesLinkList');
+      print('ERROR in _searchImages');
     }
   }
 
-  Future<void> refreshImages() async {
+  Future<void> _refreshImages() async {
     try {
       List<String> images = await _fetchImages(myTextController.text, 0);
       setState(() {
         _images = images;
       });
     } catch (_) {
-      print('Error in getImagesLinkList');
+      print('Error in _refreshImages');
     }
   }
 
   Future<List<String>> _fetchImages(String request, int page) async {
-    final response = await httpClient.get(
-      Uri.parse(
-          'https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=a732eb364ff9081e190c87dec91d5ce4&text=' +
-              request +
-              '&per_page=40&page=' +
-              page.toString() +
-              '&format=json&nojsoncallback=1'), //todo rewrite
-    );
+    final response = await httpClient
+        .get(Uri.parse(FlickrAPI().search('search', request, page)));
     if (response.statusCode == 200) {
       final photosData = photosDataFromJson(response.body).photos.photo;
       return photosData.map((photo) {
-        return 'https://farm' +
-            // photo.farm.toString() + //TODO убрать эту залепу
-            '66' +
-            '.staticflickr.com/' +
-            photo.server.toString() +
-            '/' +
-            photo.id.toString() +
-            '_' +
-            photo.secret.toString() +
-            '.jpg';
+        return FlickrAPI()
+            .imageLink(photo.farm, photo.server, photo.id, photo.secret);
       }).toList();
     }
     throw Exception('error fetching posts');
@@ -96,8 +83,8 @@ class _HomePageState extends State<HomePage> {
   bool _isHome = true; //TODO remove
   bool _goFavorite = false; //TODO remove
   List<String> _images = []; //TODO remove
-  int _columnCount = 2;
-  FavList favoriteList = FavList([]);
+  int _columnCount = 2; //TODO remove
+  FavoriteListModel favoriteList = FavoriteListModel([]); //TODO remove
   final http.Client httpClient = http.Client();
 
   @override
@@ -115,7 +102,8 @@ class _HomePageState extends State<HomePage> {
       if (scrollController.position.maxScrollExtent ==
               scrollController.offset &&
           _images.length % 10 == 0) {
-        loadMoreImages((_images.length ~/ 40) + 1);
+        //TODO add check end of pages
+        _loadMoreImages((_images.length ~/ 40) + 1);
       }
     });
   }
@@ -133,7 +121,6 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(fontSize: 18.0),
                         )
                       : TextField(
-                          //decoration: InputDecoration(hintText: 'котики'),
                           controller: myTextController,
                         ),
               //TODO search bloc
@@ -156,11 +143,10 @@ class _HomePageState extends State<HomePage> {
                                 if (myTextController.text != '' ||
                                     myTextController.text.isNotEmpty) {
                                   _isHome = false;
-                                  searchImages(myTextController.text);
+                                  _searchImages();
                                 }
                               });
                           }
-                          //TODO action
                         },
                       )),
                 Padding(
@@ -175,7 +161,6 @@ class _HomePageState extends State<HomePage> {
                               : _goFavorite = true;
                         });
 
-                        //TODO action
                       },
                     )),
                 if (!_isHome)
@@ -185,7 +170,6 @@ class _HomePageState extends State<HomePage> {
                         icon: Icon(Icons.view_column),
                         onPressed: () {
                           changeColumnCount();
-                          //TODO action
                         },
                       ))
               ],
@@ -196,12 +180,12 @@ class _HomePageState extends State<HomePage> {
                     _goFavorite, _images, favoriteList)));
   }
 
-  Widget connectorImageListWidget(
-      bool _goFavorite, List<String> imagesList, FavList favoriteList) {
+  Widget connectorImageListWidget(bool _goFavorite, List<String> imagesList,
+      FavoriteListModel favoriteList) {
     return _goFavorite ? favList(favoriteList) : imageList(imagesList);
   }
 
-  Widget favList(FavList favoriteList) {
+  Widget favList(FavoriteListModel favoriteList) {
     //TODO add bloc
     favoriteList.setList();
     List<String> images = favoriteList.getList();
@@ -225,14 +209,6 @@ class _HomePageState extends State<HomePage> {
                     color: const Color(0xAAC1E0FF),
                   ),
                 );
-                // return Center(
-                //   child: CircularProgressIndicator(
-                //     value: loadingProgress.expectedTotalBytes != null
-                //         ? loadingProgress.cumulativeBytesLoaded /
-                //         loadingProgress.expectedTotalBytes!
-                //         : null,
-                //   ),
-                // );
               },
               fit: BoxFit.cover,
               errorBuilder: (BuildContext context, Object exception,
@@ -298,6 +274,6 @@ class _HomePageState extends State<HomePage> {
                 );
               }),
         ),
-        onRefresh: refreshImages);
+        onRefresh: _refreshImages);
   }
 }

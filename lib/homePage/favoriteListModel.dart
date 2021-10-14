@@ -1,9 +1,9 @@
 import 'favoriteListDatabase.dart';
 
-class FavList {
+class FavoriteListModel {
   List<String> _favoriteList;
   FavoriteListDatabase _database = FavoriteListDatabase();
-  FavList(this._favoriteList);
+  FavoriteListModel(this._favoriteList);
 
 
   void changeFavState(String imageLink) {

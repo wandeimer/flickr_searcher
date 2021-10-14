@@ -1,10 +1,10 @@
-import 'package:flickr_searcher/homePage/favList.dart';
+import 'package:flickr_searcher/homePage/favoriteListModel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class ImageFull extends StatefulWidget {
   final String image;
-  final FavList favorite;
+  final FavoriteListModel favorite;
   const ImageFull({Key? key, required this.image, required this.favorite}) : super(key: key);
 
   @override

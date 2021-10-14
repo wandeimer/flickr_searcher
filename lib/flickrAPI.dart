@@ -1,5 +1,5 @@
 class FlickrAPI{
-  String http = 'https://www.flickor.com/services/rest/?';
+  String http = 'https://www.flickfr.com/services/rest/?';
   String apiKey = '3d6ad5bf6ffac3b56f343f8611a98906';
   int perPage = 40;
   Map<String, String> mediaType = {
